@@ -9,14 +9,26 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-steps:
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.8'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
-    goals: 'package'
+variables:
+  SONAR_TOKEN: $(sonarToken)
+
+stages:
+  - stage: build
+    jobs:
+      - job: build
+        steps:
+          - script: mvn clean compile
+            displayName: 'Build'
+          - script: mvn test
+            displayName: 'Unit Test'
+          - script: mvn install
+            displayName: 'Jar generation'
+  - stage: sonar
+    dependsOn: build
+    jobs:
+      - job: sonar
+        steps:
+          - script: mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=calculator-devops -Dsonar.login=$(SONAR_TOKEN)
+            displayName: 'Sonar'
+
+
