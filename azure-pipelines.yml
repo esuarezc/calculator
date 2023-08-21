@@ -30,5 +30,17 @@ stages:
         steps:
           - script: mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=calculator-devops -Dsonar.login=$(SONAR_TOKEN)
             displayName: 'Sonar'
-
-
+  - stage: test
+    jobs:
+      -  job: integrationTest
+         steps:
+         - task: Gradle@3
+           inputs:
+             gradleWrapperFile: 'gradlew'
+             tasks: 'build'
+             publishJUnitResults: true
+             testResultsFiles: '**/TEST-*.xml'
+             javaHomeOption: 'JDKVersion'
+             sonarQubeRunAnalysis: false
+             spotBugsAnalysis: false
+         
